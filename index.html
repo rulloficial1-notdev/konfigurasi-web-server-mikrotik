@@ -1,279 +1,960 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LAB Web Server MikroTik - Arull</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dokumentasi lengkap lab web server MikroTik meliputi topologi, addressing, DHCP, NAT, wireless, web service, pengujian, dan troubleshooting.">
+  <meta name="keywords" content="MikroTik, web server, DHCP, NAT, routing, winbox, dokumentasi jaringan">
+  <meta name="author" content="Arull">
+  <meta name="theme-color" content="#0b1020">
+  <title>LAB Web Server MikroTik - Dokumentasi Lengkap</title>
 
-<style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Courier New', monospace;
-}
+  <style>
+    :root {
+      --bg: #07111f;
+      --bg-soft: #0d1729;
+      --panel: rgba(14, 24, 42, 0.88);
+      --panel-border: rgba(77, 212, 255, 0.18);
+      --text: #f4f7fb;
+      --muted: #9fb2c8;
+      --cyan: #57e6ff;
+      --magenta: #ff4fcf;
+      --lime: #7dffb1;
+      --warning: #ffd36b;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+      --max-width: 1180px;
+    }
 
-body{
-background:#0b0f1a;
-color:white;
-overflow-x:hidden;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-/* HERO */
+    html {
+      scroll-behavior: smooth;
+    }
 
-.hero{
-height:100vh;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-text-align:center;
-background:linear-gradient(135deg,#0f1b2e,#0a0f1c);
-padding:20px;
-}
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(87, 230, 255, 0.12), transparent 34%),
+        radial-gradient(circle at top right, rgba(255, 79, 207, 0.12), transparent 28%),
+        linear-gradient(180deg, #08111e 0%, #07111f 45%, #050a13 100%);
+      overflow-x: hidden;
+    }
 
-.hero h1{
-font-size:42px;
-background:linear-gradient(90deg,#00f0ff,#ff00c8);
--webkit-background-clip:text;
-color:transparent;
-animation:glow 2s infinite alternate;
-}
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 92%);
+    }
 
-@keyframes glow{
-from{text-shadow:0 0 10px #00f0ff;}
-to{text-shadow:0 0 25px #ff00c8;}
-}
+    a {
+      color: inherit;
+    }
 
-.hero p{
-margin-top:20px;
-color:#00f0ff;
-font-size:18px;
-}
+    .container {
+      width: min(var(--max-width), calc(100% - 32px));
+      margin: 0 auto;
+    }
 
-.btn{
-margin-top:40px;
-padding:12px 30px;
-border:2px solid #00f0ff;
-color:#00f0ff;
-text-decoration:none;
-transition:0.3s;
-}
+    .hero {
+      position: relative;
+      padding: 42px 0 88px;
+    }
 
-.btn:hover{
-background:#00f0ff;
-color:black;
-box-shadow:0 0 20px #00f0ff;
-}
+    .hero-panel {
+      position: relative;
+      overflow: hidden;
+      padding: 28px;
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      background: linear-gradient(145deg, rgba(11, 22, 39, 0.94), rgba(6, 12, 23, 0.82));
+      box-shadow: var(--shadow);
+    }
 
-/* SECTION */
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto -90px -90px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 79, 207, 0.24), transparent 68%);
+    }
 
-.section{
-padding:80px 10%;
-}
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 34px;
+      flex-wrap: wrap;
+    }
 
-.section h2{
-text-align:center;
-margin-bottom:40px;
-color:#ff00c8;
-text-shadow:0 0 15px #ff00c8;
-}
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
 
-/* STEP BOX */
+    .brand-badge {
+      display: inline-flex;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(87, 230, 255, 0.16), rgba(255, 79, 207, 0.16));
+      border: 1px solid rgba(87, 230, 255, 0.26);
+      box-shadow: 0 0 24px rgba(87, 230, 255, 0.12);
+    }
 
-.step{
-position:relative;
-background:#121a2b;
-padding:25px 25px 25px 70px;
-margin-bottom:30px;
-border-radius:10px;
-border:1px solid rgba(0,255,255,0.2);
-box-shadow:0 0 15px rgba(0,255,255,0.1);
-transition:0.3s;
-}
+    .hero-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
 
-.step:hover{
-transform:translateY(-5px);
-box-shadow:0 0 25px rgba(255,0,200,0.3);
-}
+    .hero-nav a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--muted);
+      transition: 0.25s ease;
+    }
 
-.step::before{
-content:attr(data-step);
-position:absolute;
-left:20px;
-top:25px;
-width:35px;
-height:35px;
-background:#00f0ff;
-color:black;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:bold;
-border-radius:50%;
-box-shadow:0 0 15px #00f0ff;
-}
+    .hero-nav a:hover,
+    .hero-nav a:focus-visible {
+      color: var(--text);
+      border-color: rgba(87, 230, 255, 0.32);
+      background: rgba(87, 230, 255, 0.08);
+    }
 
-.step h3{
-margin-bottom:10px;
-color:#00f0ff;
-}
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+      gap: 24px;
+      align-items: start;
+    }
 
-.code{
-background:#0a0f18;
-padding:12px;
-margin-top:10px;
-color:#00ff88;
-border-radius:6px;
-font-family:monospace;
-border:1px solid rgba(0,255,136,0.2);
-}
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(87, 230, 255, 0.08);
+      color: var(--cyan);
+      border: 1px solid rgba(87, 230, 255, 0.18);
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+    }
 
-footer{
-text-align:center;
-padding:30px;
-background:#0f1626;
-color:#777;
-}
+    h1 {
+      max-width: 12ch;
+      margin-bottom: 18px;
+      font-size: clamp(2.5rem, 7vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+    }
 
-@media(max-width:768px){
-.hero h1{font-size:26px;}
-.hero p{font-size:14px;}
-.section{padding:60px 5%;}
-}
-</style>
+    .gradient-text {
+      background: linear-gradient(90deg, var(--cyan), #9be3ff 38%, #ffffff 56%, #ff8bde 78%, var(--magenta));
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-copy p {
+      max-width: 58ch;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 22px;
+      border-radius: 999px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      transform: translateY(-2px);
+    }
+
+    .button-primary {
+      color: #04111d;
+      background: linear-gradient(90deg, var(--cyan), #7dc2ff 52%, #ff8bde);
+      box-shadow: 0 14px 32px rgba(87, 230, 255, 0.2);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-card {
+      position: relative;
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: linear-gradient(180deg, rgba(17, 28, 48, 0.96), rgba(10, 16, 29, 0.9));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .hero-card h2 {
+      margin-bottom: 14px;
+      font-size: 1.1rem;
+      color: var(--cyan);
+    }
+
+    .stat-list,
+    .check-list,
+    .note-list {
+      display: grid;
+      gap: 12px;
+      list-style: none;
+    }
+
+    .stat-list li,
+    .check-list li,
+    .note-list li {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .stat-list strong,
+    .check-list strong,
+    .note-list strong {
+      color: var(--text);
+    }
+
+    main {
+      padding-bottom: 70px;
+    }
+
+    .section {
+      padding: 0 0 28px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .section-title h2 {
+      font-size: clamp(1.5rem, 3vw, 2.3rem);
+      letter-spacing: -0.03em;
+    }
+
+    .section-title p {
+      max-width: 52ch;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .panel {
+      padding: 24px;
+      border-radius: var(--radius);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .overview-grid,
+    .info-grid,
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .card h3 {
+      margin-bottom: 12px;
+      color: var(--cyan);
+      font-size: 1.05rem;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .card ul {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .topology-diagram {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(87, 230, 255, 0.07), rgba(255, 79, 207, 0.06));
+      border: 1px solid rgba(87, 230, 255, 0.18);
+    }
+
+    .topology-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(6, 12, 22, 0.52);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      flex-wrap: wrap;
+    }
+
+    .topology-node span:last-child {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 660px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    thead {
+      background: rgba(87, 230, 255, 0.08);
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    th {
+      color: var(--text);
+      font-size: 0.96rem;
+    }
+
+    td {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    code,
+    .mono {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    .steps {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step {
+      position: relative;
+      padding: 22px 22px 22px 82px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .step:hover {
+      transform: translateY(-3px);
+      border-color: rgba(87, 230, 255, 0.24);
+    }
+
+    .step::before {
+      content: attr(data-step);
+      position: absolute;
+      top: 22px;
+      left: 22px;
+      display: inline-flex;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--cyan), #7dc2ff);
+      color: #04111d;
+      font-weight: 800;
+      box-shadow: 0 12px 24px rgba(87, 230, 255, 0.18);
+    }
+
+    .step h3 {
+      margin-bottom: 10px;
+      color: var(--text);
+      font-size: 1.08rem;
+    }
+
+    .step p {
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .step + .step {
+      margin-top: 2px;
+    }
+
+    .code-block {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #06101c;
+      border: 1px solid rgba(125, 255, 177, 0.18);
+      color: var(--lime);
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .badge-info {
+      color: var(--cyan);
+      background: rgba(87, 230, 255, 0.08);
+      border-color: rgba(87, 230, 255, 0.18);
+    }
+
+    .badge-warning {
+      color: var(--warning);
+      background: rgba(255, 211, 107, 0.09);
+      border-color: rgba(255, 211, 107, 0.18);
+    }
+
+    .check-item h3 {
+      color: var(--lime);
+    }
+
+    .check-item p {
+      color: var(--muted);
+    }
+
+    .notes {
+      display: grid;
+      gap: 14px;
+    }
+
+    footer {
+      padding: 30px 0 40px;
+      color: #7f93ac;
+      text-align: center;
+    }
+
+    footer p + p {
+      margin-top: 8px;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid,
+      .overview-grid,
+      .info-grid,
+      .check-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding-top: 20px;
+        padding-bottom: 58px;
+      }
+
+      .hero-panel,
+      .panel {
+        padding: 20px;
+      }
+
+      .topbar {
+        margin-bottom: 26px;
+      }
+
+      .hero-nav {
+        width: 100%;
+      }
+
+      .hero-nav a {
+        width: 100%;
+        text-align: center;
+      }
+
+      .hero-actions {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .step {
+        padding: 78px 18px 18px;
+      }
+
+      .step::before {
+        top: 18px;
+        left: 18px;
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <header class="hero">
+    <div class="container">
+      <div class="hero-panel">
+        <div class="topbar">
+          <div class="brand">
+            <span class="brand-badge">MT</span>
+            <span>Lab Documentation</span>
+          </div>
 
-<section class="hero">
-<h1>LAB Web Server MikroTik</h1>
-<p>Konfigurasi Lengkap Routing, DHCP, NAT & Web Server Tanpa Internet</p>
-<a href="#lab" class="btn">Lihat Tutorial Lengkap</a>
-</section>
+          <nav class="hero-nav" aria-label="Navigasi dokumentasi">
+            <a href="#overview">Ringkasan</a>
+            <a href="#addressing">Addressing</a>
+            <a href="#steps">Langkah Konfigurasi</a>
+            <a href="#testing">Pengujian</a>
+          </nav>
+        </div>
 
-<section id="lab" class="section">
-<h2>Konfigurasi Full Step by Step (Winbox 64x)</h2>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="eyebrow">Dokumentasi Praktikum MikroTik</span>
+            <h1><span class="gradient-text">LAB Web Server MikroTik</span></h1>
+            <p>
+              Halaman ini berisi dokumentasi lengkap konfigurasi router MikroTik untuk kebutuhan routing,
+              DHCP, NAT, wireless access point, dan web server lokal. Susunan isi dibuat agar bisa langsung
+              dipakai sebagai bahan laporan, presentasi, maupun panduan praktik step by step.
+            </p>
 
-<div class="step" data-step="1">
-<h3>Reset Router</h3>
-System → Reset Configuration → Centang No Default Configuration.
-</div>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#steps">Buka Tutorial Lengkap</a>
+              <a class="button button-secondary" href="#testing">Lihat Checklist Uji</a>
+            </div>
+          </div>
 
-<div class="step" data-step="2">
-<h3>Set IP Address</h3>
-IP → Addresses → Add
-<div class="code">
-ether1 = 192.168.1.2/24 (ISP)  
-ether2 = 192.168.100.1/24 (Server LAN)  
-ether3 = 192.168.200.1/24 (Client LAN)  
-wlan1  = 10.10.1.1/24 (WiFi)
-</div>
-</div>
+          <aside class="hero-card" aria-label="Informasi cepat">
+            <h2>Informasi Cepat</h2>
+            <ul class="stat-list">
+              <li><strong>Platform:</strong> MikroTik RouterOS via Winbox</li>
+              <li><strong>Mode Lab:</strong> Dapat berjalan lokal tanpa internet</li>
+              <li><strong>Layanan:</strong> DHCP, WiFi AP, HTTP port 80 dan 8080</li>
+              <li><strong>Dokumen diperbarui:</strong> 26 Maret 2026</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </header>
 
-<div class="step" data-step="3">
-<h3>Set Default Route (Jika Ada Internet)</h3>
-IP → Routes → Add
-<div class="code">
-Dst Address: 0.0.0.0/0  
-Gateway: 192.168.1.1
-</div>
-</div>
+  <main>
+    <section id="overview" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Ringkasan Dokumentasi</h2>
+          <p>
+            Sebelum masuk ke tahap konfigurasi, bagian ini menjelaskan tujuan praktikum, perangkat yang
+            diperlukan, dan gambaran topologi agar proses setup lebih mudah diikuti.
+          </p>
+        </div>
 
-<div class="step" data-step="4">
-<h3>Set DNS</h3>
-IP → DNS
-<div class="code">
-8.8.8.8  
-8.8.4.4  
-Centang Allow Remote Requests
-</div>
-</div>
+        <div class="panel">
+          <div class="overview-grid">
+            <article class="card">
+              <h3>Tujuan Praktikum</h3>
+              <ul>
+                <li>Mengonfigurasi router MikroTik sebagai pusat koneksi beberapa jaringan.</li>
+                <li>Menyediakan alamat IP otomatis untuk server LAN, client LAN, dan WiFi.</li>
+                <li>Mengaktifkan layanan web server lokal agar file <code>index.html</code> dapat diakses melalui browser.</li>
+              </ul>
+            </article>
 
-<div class="step" data-step="5">
-<h3>Buat DHCP Server</h3>
-IP → DHCP Server → Setup
-<div class="code">
-ether2 → 192.168.100.10-100  
-ether3 → 192.168.200.10-100  
-wlan1  → 10.10.1.10-100
-</div>
-</div>
+            <article class="card">
+              <h3>Kebutuhan</h3>
+              <ul>
+                <li>1 router MikroTik yang dapat diakses melalui Winbox.</li>
+                <li>Perangkat client untuk pengujian melalui LAN atau WiFi.</li>
+                <li>File web statis <code>index.html</code> yang diunggah ke menu <code>Files</code>.</li>
+              </ul>
+            </article>
 
-<div class="step" data-step="6">
-<h3>Aktifkan WiFi Access Point</h3>
-Wireless → wlan1
-<div class="code">
-Mode: ap bridge  
-SSID: LAB-ARULL  
-Security: WPA2  
-Password: 12345678
-</div>
-</div>
+            <article class="card">
+              <h3>Catatan Penting</h3>
+              <ul>
+                <li>Langkah default route dan NAT hanya dibutuhkan jika lab terhubung ke internet.</li>
+                <li>Jika hanya untuk akses lokal, web server tetap bisa berjalan tanpa koneksi internet.</li>
+                <li>Gunakan satu skenario IP secara konsisten agar pengujian tidak rancu.</li>
+              </ul>
+            </article>
+          </div>
 
-<div class="step" data-step="7">
-<h3>Konfigurasi NAT (Jika Ada Internet)</h3>
-IP → Firewall → NAT → Add
-<div class="code">
-Chain: srcnat  
-Out Interface: ether1  
-Action: masquerade
-</div>
-</div>
+          <div class="topology-diagram" aria-label="Topologi jaringan">
+            <div class="topology-node">
+              <span><strong>ether1</strong> - Jalur ISP / Internet (opsional)</span>
+              <span>192.168.1.2/24</span>
+            </div>
+            <div class="topology-node">
+              <span><strong>ether2</strong> - Server LAN</span>
+              <span>192.168.100.1/24</span>
+            </div>
+            <div class="topology-node">
+              <span><strong>ether3</strong> - Client LAN</span>
+              <span>192.168.200.1/24</span>
+            </div>
+            <div class="topology-node">
+              <span><strong>wlan1</strong> - WiFi Access Point</span>
+              <span>10.10.1.1/24</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<div class="step" data-step="8">
-<h3>Aktifkan Web Server</h3>
-IP → Services
-<div class="code">
-Enable www (Port 80)  
-Duplicate → Port 8080
-</div>
-</div>
+    <section id="addressing" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Tabel Addressing</h2>
+          <p>
+            Tabel ini membantu mendokumentasikan pembagian interface, alamat IP, dan fungsi setiap jaringan
+            sehingga konfigurasi lebih mudah dicek kembali saat troubleshooting.
+          </p>
+        </div>
 
-<div class="step" data-step="9">
-<h3>Upload File HTML</h3>
-Menu Files → Upload
-<div class="code">
-index.html
-</div>
-</div>
+        <div class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Interface</th>
+                  <th>IP Address</th>
+                  <th>Fungsi</th>
+                  <th>DHCP Pool</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="mono">ether1</span></td>
+                  <td>192.168.1.2/24</td>
+                  <td>Jalur ke ISP atau modem internet</td>
+                  <td>Tidak digunakan</td>
+                </tr>
+                <tr>
+                  <td><span class="mono">ether2</span></td>
+                  <td>192.168.100.1/24</td>
+                  <td>Segmen server lokal</td>
+                  <td>192.168.100.10 - 192.168.100.100</td>
+                </tr>
+                <tr>
+                  <td><span class="mono">ether3</span></td>
+                  <td>192.168.200.1/24</td>
+                  <td>Segmen client LAN</td>
+                  <td>192.168.200.10 - 192.168.200.100</td>
+                </tr>
+                <tr>
+                  <td><span class="mono">wlan1</span></td>
+                  <td>10.10.1.1/24</td>
+                  <td>Akses client nirkabel</td>
+                  <td>10.10.1.10 - 10.10.1.100</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-<div class="step" data-step="10">
-<h3>Test Akses</h3>
-Dari WiFi:
-<div class="code">
-http://10.10.1.1  
+          <div class="badge-row">
+            <span class="badge badge-info">Saran: gunakan penamaan interface yang konsisten</span>
+            <span class="badge badge-warning">Default route dan NAT bersifat opsional untuk lab offline</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="steps" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Langkah Konfigurasi</h2>
+          <p>
+            Urutan berikut sudah disusun dari tahap awal sampai pengujian akhir. Format ini cocok digunakan
+            sebagai isi utama laporan dokumentasi praktikum.
+          </p>
+        </div>
+
+        <div class="panel">
+          <div class="steps">
+            <article class="step" data-step="1">
+              <h3>Reset router ke kondisi bersih</h3>
+              <p>
+                Buka menu <strong>System &gt; Reset Configuration</strong>, lalu aktifkan opsi
+                <strong>No Default Configuration</strong>. Langkah ini memastikan router tidak membawa
+                aturan lama yang dapat mengganggu konfigurasi lab.
+              </p>
+            </article>
+
+            <article class="step" data-step="2">
+              <h3>Atur IP address pada tiap interface</h3>
+              <p>
+                Masuk ke menu <strong>IP &gt; Addresses</strong> lalu tambahkan alamat IP sesuai fungsi
+                jaringan yang digunakan pada lab.
+              </p>
+              <div class="code-block">ether1 = 192.168.1.2/24   (ISP / Internet)
+ether2 = 192.168.100.1/24 (Server LAN)
+ether3 = 192.168.200.1/24 (Client LAN)
+wlan1  = 10.10.1.1/24     (WiFi)</div>
+            </article>
+
+            <article class="step" data-step="3">
+              <h3>Tambahkan default route jika ada koneksi internet</h3>
+              <p>
+                Langkah ini hanya diperlukan bila router akan mengakses jaringan luar. Jika lab murni lokal,
+                bagian ini dapat dilewati tanpa memengaruhi web server internal.
+              </p>
+              <div class="code-block">Menu: IP &gt; Routes &gt; Add
+Dst. Address : 0.0.0.0/0
+Gateway      : 192.168.1.1</div>
+            </article>
+
+            <article class="step" data-step="4">
+              <h3>Konfigurasi DNS</h3>
+              <p>
+                Buka menu <strong>IP &gt; DNS</strong> lalu isi server DNS dan aktifkan
+                <strong>Allow Remote Requests</strong> agar client dapat menggunakan router sebagai resolver.
+              </p>
+              <div class="code-block">Primary DNS   : 8.8.8.8
+Secondary DNS : 8.8.4.4
+Allow Remote Requests : enabled</div>
+            </article>
+
+            <article class="step" data-step="5">
+              <h3>Buat DHCP server untuk setiap segmen</h3>
+              <p>
+                Jalankan wizard pada menu <strong>IP &gt; DHCP Server</strong> untuk membagikan IP secara
+                otomatis kepada perangkat yang terhubung ke masing-masing jaringan.
+              </p>
+              <div class="code-block">ether2 -> 192.168.100.10 - 192.168.100.100
+ether3 -> 192.168.200.10 - 192.168.200.100
+wlan1  -> 10.10.1.10 - 10.10.1.100</div>
+            </article>
+
+            <article class="step" data-step="6">
+              <h3>Aktifkan wireless access point</h3>
+              <p>
+                Masuk ke menu <strong>Wireless &gt; wlan1</strong>, ubah mode menjadi
+                <strong>ap bridge</strong>, lalu tentukan SSID dan keamanan WiFi.
+              </p>
+              <div class="code-block">Mode     : ap bridge
+SSID     : LAB-ARULL
+Security : WPA2-PSK
+Password : 12345678</div>
+            </article>
+
+            <article class="step" data-step="7">
+              <h3>Tambahkan NAT bila internet dibagikan ke client</h3>
+              <p>
+                NAT hanya dipakai saat client perlu mengakses internet melalui interface menuju ISP. Untuk
+                akses lokal ke web server MikroTik, aturan ini tidak wajib.
+              </p>
+              <div class="code-block">Menu          : IP &gt; Firewall &gt; NAT
+Chain         : srcnat
+Out. Interface: ether1
+Action        : masquerade</div>
+            </article>
+
+            <article class="step" data-step="8">
+              <h3>Aktifkan layanan web server</h3>
+              <p>
+                Buka menu <strong>IP &gt; Services</strong> lalu aktifkan service
+                <strong>www</strong> pada port 80. Jika dibutuhkan, duplikasi service untuk port 8080.
+              </p>
+              <div class="code-block">www  -> enabled on port 80
+www-8080 -> enabled on port 8080</div>
+            </article>
+
+            <article class="step" data-step="9">
+              <h3>Upload file halaman web</h3>
+              <p>
+                Masuk ke menu <strong>Files</strong> lalu unggah file <code>index.html</code>. Setelah file
+                berada di router, halaman dapat diakses melalui browser client yang berada dalam jaringan.
+              </p>
+              <div class="code-block">File yang diunggah:
+index.html</div>
+            </article>
+
+            <article class="step" data-step="10">
+              <h3>Lakukan pengujian akses dari WiFi dan LAN</h3>
+              <p>
+                Buka browser pada perangkat client lalu uji akses menggunakan alamat IP sesuai segmen yang
+                dipakai. Jika service port 8080 aktif, lakukan pengujian tambahan pada port tersebut.
+              </p>
+              <div class="code-block">Dari WiFi:
+http://10.10.1.1
 http://10.10.1.1:8080
-</div>
 
-Dari LAN:
-<div class="code">
-http://192.168.100.1  
-http://192.168.200.1
-</div>
-</div>
+Dari Server LAN:
+http://192.168.100.1
 
-<div class="step" data-step="11">
-<h3>Penjelasan Routing</h3>
-Semua jaringan berada di satu router, sehingga routing berjalan otomatis tanpa perlu konfigurasi tambahan.
-</div>
+Dari Client LAN:
+http://192.168.200.1</div>
+            </article>
 
-<div class="step" data-step="12">
-<h3>Troubleshooting</h3>
-Jika tidak bisa akses:
-<div class="code">
-✔ Cek DHCP running  
-✔ Cek IP client  
-✔ Cek Service www aktif  
-✔ Cek Firewall tidak blokir port 80/8080
-</div>
-</div>
+            <article class="step" data-step="11">
+              <h3>Penjelasan routing pada skenario ini</h3>
+              <p>
+                Karena semua subnet berada di dalam satu perangkat router, proses routing antarjaringan sudah
+                berlangsung otomatis selama tiap interface memiliki IP yang benar dan tidak ada firewall yang
+                memblokir lalu lintas internal.
+              </p>
+            </article>
 
-</section>
+            <article class="step" data-step="12">
+              <h3>Dokumentasikan hasil akhir dan troubleshooting</h3>
+              <p>
+                Simpan bukti konfigurasi, hasil ping, serta tangkapan layar tampilan web server sebagai bagian
+                dari laporan. Catat juga masalah yang muncul dan tindakan koreksinya.
+              </p>
+              <div class="code-block">Poin cek:
+- DHCP server berjalan normal
+- Client mendapat IP sesuai pool
+- Service www aktif
+- Port 80 / 8080 tidak diblokir firewall
+- File index.html berhasil terbaca oleh router</div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<footer>
-© 2026 Arull | Student Network Engineer
-</footer>
+    <section id="testing" class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Checklist Pengujian</h2>
+          <p>
+            Bagian ini membantu memastikan dokumentasi tidak hanya berisi konfigurasi, tetapi juga hasil
+            verifikasi bahwa seluruh layanan berjalan sesuai tujuan.
+          </p>
+        </div>
 
+        <div class="panel">
+          <div class="check-grid">
+            <article class="card check-item">
+              <h3>Uji Konektivitas</h3>
+              <p>Pastikan client memperoleh IP otomatis, dapat ping ke gateway, dan dapat menjangkau router sesuai segmen jaringan.</p>
+            </article>
+
+            <article class="card check-item">
+              <h3>Uji Layanan Web</h3>
+              <p>Buka akses HTTP dari WiFi dan LAN. Verifikasi bahwa isi halaman tampil tanpa error pada port 80 maupun 8080 bila diaktifkan.</p>
+            </article>
+
+            <article class="card check-item">
+              <h3>Uji Internet Opsional</h3>
+              <p>Jika ether1 terhubung ke ISP, cek DNS resolution dan akses internet dari client untuk memastikan route dan NAT sudah benar.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-title">
+          <h2>Catatan Tambahan</h2>
+          <p>
+            Kamu bisa memakai bagian ini sebagai penutup laporan untuk menjelaskan hasil praktikum dan hal-hal
+            yang perlu diperhatikan saat implementasi ulang.
+          </p>
+        </div>
+
+        <div class="panel notes">
+          <ul class="note-list">
+            <li><strong>Kesimpulan:</strong> MikroTik dapat digunakan sebagai pusat routing, DHCP, WiFi, dan web server lokal dalam satu perangkat.</li>
+            <li><strong>Keamanan:</strong> Ganti password WiFi dan batasi service yang tidak digunakan jika lab akan dipakai di lingkungan nyata.</li>
+            <li><strong>Dokumentasi laporan:</strong> Tambahkan screenshot Winbox, hasil pengujian browser, dan konfigurasi interface sebagai lampiran.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Arull | Student Network Engineer</p>
+      <p>Dokumentasi lab web server MikroTik untuk kebutuhan praktik, presentasi, dan laporan.</p>
+    </div>
+  </footer>
 </body>
 </html>
